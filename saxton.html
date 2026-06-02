@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saxton – Phyron Video Performance Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--surface:#12151c;--surface2:#1a1e28;--border:#252a38;--accent:#e8f03a;--accent2:#3af0a0;--accent3:#3a8ef0;--accent4:#f03a8e;--text:#e8eaf0;--muted:#6b7490}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 36px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo-area{display:flex;align-items:center;gap:14px}
+.phyron-badge{background:var(--accent);color:#0a0c10;font-weight:700;font-size:12px;letter-spacing:.1em;padding:5px 12px;border-radius:4px}
+.header-title{font-family:'DM Serif Display',serif;font-size:17px}
+.filter-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:12px 36px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-label{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.filter-divider{width:1px;height:24px;background:var(--border);margin:0 6px}
+.filter-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;transition:all .15s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#0a0c10;font-weight:600}
+.filter-btn.year-btn.active{background:var(--accent3);border-color:var(--accent3);color:#fff}
+.filter-btn.source-btn.active{background:#f0a03a;border-color:#f0a03a;color:#0a0c10}
+.dropdown-wrap{position:relative;display:inline-block}
+.dropdown-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;min-width:140px;z-index:200;padding:6px 0;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.dropdown-menu.open{display:block}
+.dropdown-item{padding:7px 16px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.dropdown-item:hover{background:var(--surface2);color:var(--text)}
+.dropdown-item.active{color:var(--accent);font-weight:600}
+main{padding:28px 36px;max-width:1200px;margin:0 auto}
+.banner-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.mom-banner{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;flex:1;min-width:0}
+.mom-banner.yoy{border-color:#3a8ef044}
+.banner-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;white-space:nowrap}
+.up{color:var(--accent2)}.down{color:var(--accent4)}
+.mom-val{font-family:'DM Serif Display',serif;font-size:18px}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .2s;position:relative;overflow:hidden}
+.kpi-card:hover{border-color:var(--accent)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:0;transition:opacity .2s}
+.kpi-card:hover::before{opacity:1}
+.kpi-label{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.kpi-value{font-family:'DM Serif Display',serif;font-size:30px;line-height:1;margin-bottom:5px}
+.kpi-sub{color:var(--muted);font-size:11px}
+.kpi-change{font-size:11px;font-weight:600;margin-top:4px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-family:'DM Serif Display',serif;font-size:15px}
+.card-tag{font-size:11px;color:var(--muted);border:1px solid var(--border);padding:3px 10px;border-radius:10px}
+.funnel-wrap{display:flex;flex-direction:column;gap:10px}
+.funnel-row{display:flex;align-items:center;gap:12px}
+.funnel-label{width:75px;font-size:12px;color:var(--muted);flex-shrink:0}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--surface2);border-radius:4px;overflow:visible;position:relative}
+.funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;color:#fff}
+.funnel-pct{width:44px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0}
+.eng-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.eng-item{background:var(--surface2);border-radius:8px;padding:14px;text-align:center}
+.eng-num{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:4px}
+.eng-label{font-size:11px;color:var(--muted)}
+.source-breakdown{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
+.source-breakdown-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px}
+.trend-wrap{position:relative}
+canvas{max-height:260px}
+@media(max-width:1000px){.kpi-row{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr}main,header,.filter-bar{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-area">
+    <span class="phyron-badge">PHYRON</span>
+    <span class="header-title">Saxton – Video Performance Report</span>
+  </div>
+</header>
+<div class="filter-bar">
+  <span class="filter-label">Period</span>
+  <button class="filter-btn year-btn" onclick="setPeriod('2023-all',this)">2023</button>
+  <button class="filter-btn year-btn" onclick="setPeriod('2024-all',this)">2024</button>
+  <button class="filter-btn year-btn active" onclick="setPeriod('2025-all',this)">2025</button>
+
+  <div class="dropdown-wrap">
+    <button class="filter-btn year-btn" onclick="toggleDropdown('dd2026',event)" id="dd2026Btn">2026 ▾</button>
+    <div class="dropdown-menu" id="dd2026">
+      <div class="dropdown-item" onclick="setPeriod('2026-all',this,'2026 YTD')">YTD</div>
+      <div class="dropdown-item" onclick="setPeriod('2026-1',this,'Jan 2026')">January</div>
+      <div class="dropdown-item" onclick="setPeriod('2026-2',this,'Feb 2026')">February</div>
+      <div class="dropdown-item" onclick="setPeriod('2026-3',this,'Mar 2026')">March</div>
+      <div class="dropdown-item" onclick="setPeriod('2026-4',this,'Apr 2026')">April</div>
+      <div class="dropdown-item" onclick="setPeriod('2026-5',this,'May 2026')">May</div>
+
+    </div>
+  </div>
+
+  <div class="dropdown-wrap">
+    <button class="filter-btn year-btn" onclick="toggleDropdown('dd2025m',event)" id="dd2025mBtn">2025 Monthly ▾</button>
+    <div class="dropdown-menu" id="dd2025m">
+      <div class="dropdown-item" onclick="setPeriod('2025-1',this,'Jan 2025')">January</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-2',this,'Feb 2025')">February</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-3',this,'Mar 2025')">March</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-4',this,'Apr 2025')">April</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-5',this,'May 2025')">May</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-6',this,'Jun 2025')">June</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-7',this,'Jul 2025')">July</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-8',this,'Aug 2025')">August</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-9',this,'Sep 2025')">September</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-10',this,'Oct 2025')">October</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-11',this,'Nov 2025')">November</div>
+      <div class="dropdown-item" onclick="setPeriod('2025-12',this,'Dec 2025')">December</div>
+    </div>
+  </div>
+
+  <div class="filter-divider"></div>
+  <span class="filter-label">Source</span>
+  <button class="filter-btn source-btn active" onclick="filterSource('all',this)">All Sources</button>
+  <button class="filter-btn source-btn" onclick="filterSource('phyron',this)">Phyron</button>
+  <button class="filter-btn source-btn" onclick="filterSource('autotrader',this)">AutoTrader</button>
+  <button class="filter-btn source-btn" onclick="filterSource('motorscouk',this)">Motors.co.uk</button>
+</div>
+
+<main>
+  <div class="banner-row" id="bannerRow" style="display:none">
+    <div class="mom-banner" id="momBanner" style="display:none"></div>
+    <div class="mom-banner yoy" id="yoyBanner" style="display:none"></div>
+  </div>
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Monthly Video Starts Trend</span><span class="card-tag" id="trendTag">All Sources</span></div>
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Video Views by Source</span><span class="card-tag">view_start</span></div>
+      <canvas id="sourceChart"></canvas>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Video Completion Funnel</span><span class="card-tag" id="funnelTag">All Sources</span></div>
+      <div class="funnel-wrap" id="funnel"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Engaged Viewers</span><span class="card-tag" id="engTag">All Sources</span></div>
+      <div class="eng-grid" id="engGrid"></div>
+      <div class="source-breakdown" id="engSourceBreakdown"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const RAW = [
+[2023,3,"phyron","cta_cust_book_test_drive",30,2],[2023,3,"default","cta_cust_book_test_drive",15,3],[2023,3,"default","cta_cust_reserve",27,3],[2023,3,"phyron","cta_cust_reserve",50,3],[2023,3,"phyron","cta_info_box",11,6],[2023,3,"default","cta_info_box",1,1],[2023,3,"phyron","cta_share",1,1],[2023,3,"default","cta_share_done",1,1],[2023,3,"phyron","cta_share_done",3,1],[2023,3,"phyron","cta_share_error",11,10],[2023,3,"default","cta_share_start",1,1],[2023,3,"phyron","cta_share_start",14,11],[2023,3,"phyron","fullscreen",40,25],[2023,3,"default","view_25",7,2],[2023,3,"motorscouk","view_25",564,562],[2023,3,"phyron","view_25",316,246],[2023,3,"phyron","view_50",278,221],[2023,3,"default","view_50",5,2],[2023,3,"motorscouk","view_50",454,453],[2023,3,"motorscouk","view_75",382,381],[2023,3,"default","view_75",4,2],[2023,3,"phyron","view_75",254,200],[2023,3,"phyron","view_end",136,119],[2023,3,"default","view_end",4,2],[2023,3,"motorscouk","view_end",292,291],[2023,3,"phyron","view_start",402,275],[2023,3,"motorscouk","view_start",951,948],[2023,3,"default","view_start",23,6],
+[2023,4,"phyron","cta_cust_book_test_drive",13,7],[2023,4,"phyron","cta_cust_reserve",12,9],[2023,4,"phyron","cta_info_box",82,54],[2023,4,"phyron","cta_share",6,4],[2023,4,"phyron","cta_share_done",17,15],[2023,4,"phyron","cta_share_error",77,71],[2023,4,"phyron","cta_share_start",95,83],[2023,4,"phyron","cta_share_whatsapp",3,1],[2023,4,"phyron","fullscreen",417,316],[2023,4,"autotrader","fullscreen",257,240],[2023,4,"autotrader","view_25",3693,3558],[2023,4,"phyron","view_25",4923,3902],[2023,4,"default","view_25",1,1],[2023,4,"motorscouk","view_25",791,790],[2023,4,"default","view_50",1,1],[2023,4,"autotrader","view_50",3197,3086],[2023,4,"phyron","view_50",4307,3450],[2023,4,"motorscouk","view_50",644,644],[2023,4,"motorscouk","view_75",545,545],[2023,4,"phyron","view_75",3811,3105],[2023,4,"autotrader","view_75",2766,2676],[2023,4,"default","view_75",1,1],[2023,4,"default","view_end",1,1],[2023,4,"autotrader","view_end",1566,1536],[2023,4,"phyron","view_end",2302,1994],[2023,4,"motorscouk","view_end",407,407],[2023,4,"motorscouk","view_start",1351,1349],[2023,4,"default","view_start",10,4],[2023,4,"phyron","view_start",6175,4687],[2023,4,"autotrader","view_start",4732,4544],
+[2023,5,"phyron","cta_cust_book_test_drive",18,10],[2023,5,"phyron","cta_cust_reserve",16,14],[2023,5,"phyron","cta_info_box",55,43],[2023,5,"phyron","cta_share",9,7],[2023,5,"phyron","cta_share_done",13,10],[2023,5,"phyron","cta_share_error",52,48],[2023,5,"phyron","cta_share_start",66,59],[2023,5,"phyron","cta_share_whatsapp",1,1],[2023,5,"phyron","fullscreen",328,268],[2023,5,"autotrader","fullscreen",450,429],[2023,5,"motorscouk","view_25",801,800],[2023,5,"autotrader","view_25",5855,5670],[2023,5,"default","view_25",1,1],[2023,5,"phyron","view_25",4786,3831],[2023,5,"phyron","view_50",4172,3395],[2023,5,"autotrader","view_50",5000,4861],[2023,5,"motorscouk","view_50",621,620],[2023,5,"default","view_50",1,1],[2023,5,"default","view_75",1,1],[2023,5,"motorscouk","view_75",502,501],[2023,5,"phyron","view_75",3634,3008],[2023,5,"autotrader","view_75",4331,4211],[2023,5,"phyron","view_end",2210,1935],[2023,5,"default","view_end",1,1],[2023,5,"motorscouk","view_end",369,369],[2023,5,"autotrader","view_end",2466,2407],[2023,5,"phyron","view_start",5999,4620],[2023,5,"motorscouk","view_start",1439,1438],[2023,5,"autotrader","view_start",7397,7120],[2023,5,"default","view_start",1,1],
+[2023,6,"phyron","cta_cust_book_test_drive",8,5],[2023,6,"phyron","cta_cust_reserve",15,14],[2023,6,"phyron","cta_info_box",36,32],[2023,6,"phyron","cta_share",4,4],[2023,6,"phyron","cta_share_done",19,18],[2023,6,"phyron","cta_share_error",47,42],[2023,6,"phyron","cta_share_start",68,62],[2023,6,"phyron","cta_share_whatsapp",1,1],[2023,6,"autotrader","fullscreen",338,323],[2023,6,"phyron","fullscreen",260,202],[2023,6,"default","view_25",1,1],[2023,6,"motorscouk","view_25",596,592],[2023,6,"phyron","view_25",3886,3134],[2023,6,"autotrader","view_25",4285,4175],[2023,6,"phyron","view_50",3391,2769],[2023,6,"autotrader","view_50",3667,3585],[2023,6,"motorscouk","view_50",470,467],[2023,6,"default","view_50",1,1],[2023,6,"phyron","view_75",2962,2467],[2023,6,"motorscouk","view_75",382,379],[2023,6,"autotrader","view_75",3154,3097],[2023,6,"autotrader","view_end",1740,1712],[2023,6,"phyron","view_end",1812,1608],[2023,6,"motorscouk","view_end",278,275],[2023,6,"motorscouk","view_start",1084,1077],[2023,6,"default","view_start",1,1],[2023,6,"phyron","view_start",5232,4127],[2023,6,"autotrader","view_start",5493,5309],
+[2023,7,"phyron","cta_cust_book_test_drive",7,4],[2023,7,"phyron","cta_cust_reserve",12,12],[2023,7,"phyron","cta_info_box",55,45],[2023,7,"phyron","cta_share",3,3],[2023,7,"phyron","cta_share_done",16,15],[2023,7,"phyron","cta_share_error",67,63],[2023,7,"phyron","cta_share_start",88,78],[2023,7,"phyron","fullscreen",392,293],[2023,7,"autotrader","fullscreen",375,358],[2023,7,"autotrader","view_25",4925,4774],[2023,7,"motorscouk","view_25",833,829],[2023,7,"phyron","view_25",4996,3883],[2023,7,"default","view_25",1,1],[2023,7,"phyron","view_50",4365,3441],[2023,7,"autotrader","view_50",4202,4090],[2023,7,"motorscouk","view_50",672,668],[2023,7,"motorscouk","view_75",533,531],[2023,7,"phyron","view_75",3787,3048],[2023,7,"autotrader","view_75",3606,3520],[2023,7,"phyron","view_end",2276,1939],[2023,7,"motorscouk","view_end",390,390],[2023,7,"autotrader","view_end",2023,1996],[2023,7,"default","view_start",1,1],[2023,7,"phyron","view_start",6569,5007],[2023,7,"motorscouk","view_start",1420,1415],[2023,7,"autotrader","view_start",6330,6102],
+[2023,8,"phyron","cta_cust_reserve",6,6],[2023,8,"phyron","cta_info_box",27,18],[2023,8,"phyron","cta_share",3,3],[2023,8,"phyron","cta_share_done",5,4],[2023,8,"phyron","cta_share_error",13,12],[2023,8,"phyron","cta_share_start",19,17],[2023,8,"autotrader","fullscreen",350,337],[2023,8,"phyron","fullscreen",282,210],[2023,8,"motorscouk","view_25",681,677],[2023,8,"phyron","view_25",4467,3649],[2023,8,"autotrader","view_25",4622,4458],[2023,8,"phyron","view_50",3851,3211],[2023,8,"autotrader","view_50",3917,3795],[2023,8,"motorscouk","view_50",537,533],[2023,8,"motorscouk","view_75",437,434],[2023,8,"autotrader","view_75",3362,3262],[2023,8,"phyron","view_75",3369,2863],[2023,8,"autotrader","view_end",1874,1831],[2023,8,"motorscouk","view_end",313,313],[2023,8,"phyron","view_end",1944,1749],[2023,8,"autotrader","view_start",5786,5547],[2023,8,"motorscouk","view_start",1274,1267],[2023,8,"phyron","view_start",6057,4695],
+[2023,9,"phyron","cta_cust_book_test_drive",18,3],[2023,9,"phyron","cta_cust_reserve",5,5],[2023,9,"phyron","cta_info_box",18,14],[2023,9,"phyron","cta_share_done",9,7],[2023,9,"phyron","cta_share_error",6,5],[2023,9,"phyron","cta_share_start",15,11],[2023,9,"phyron","fullscreen",229,173],[2023,9,"autotrader","fullscreen",381,372],[2023,9,"motorscouk","fullscreen",1,1],[2023,9,"motorscouk","view_25",582,582],[2023,9,"autotrader","view_25",4546,4401],[2023,9,"phyron","view_25",3969,3260],[2023,9,"phyron","view_50",3367,2820],[2023,9,"motorscouk","view_50",458,458],[2023,9,"autotrader","view_50",3800,3690],[2023,9,"autotrader","view_75",3262,3179],[2023,9,"phyron","view_75",2900,2470],[2023,9,"motorscouk","view_75",372,372],[2023,9,"motorscouk","view_end",276,276],[2023,9,"phyron","view_end",1640,1478],[2023,9,"autotrader","view_end",1712,1679],[2023,9,"phyron","view_start",5273,4095],[2023,9,"motorscouk","view_start",1107,1106],[2023,9,"autotrader","view_start",5662,5454],
+[2023,10,"default","cta_cust_book_test_drive",14,2],[2023,10,"phyron","cta_cust_book_test_drive",64,4],[2023,10,"phyron","cta_cust_reserve",14,6],[2023,10,"default","cta_cust_reserve",8,2],[2023,10,"phyron","cta_info_box",29,22],[2023,10,"phyron","cta_share",1,1],[2023,10,"phyron","cta_share_done",13,11],[2023,10,"phyron","cta_share_error",12,11],[2023,10,"phyron","cta_share_start",25,21],[2023,10,"phyron","fullscreen",227,182],[2023,10,"autotrader","fullscreen",303,292],[2023,10,"autotrader","view_25",4209,4035],[2023,10,"phyron","view_25",4266,3364],[2023,10,"motorscouk","view_25",767,766],[2023,10,"default","view_25",1,1],[2023,10,"motorscouk","view_50",575,575],[2023,10,"autotrader","view_50",3502,3387],[2023,10,"phyron","view_50",3606,2914],[2023,10,"phyron","view_75",3131,2564],[2023,10,"motorscouk","view_75",440,440],[2023,10,"autotrader","view_75",3000,2911],[2023,10,"autotrader","view_end",1579,1540],[2023,10,"motorscouk","view_end",305,305],[2023,10,"phyron","view_end",1791,1562],[2023,10,"phyron","view_start",5526,4204],[2023,10,"default","view_start",1,1],[2023,10,"autotrader","view_start",5479,5212],[2023,10,"motorscouk","view_start",1418,1414],
+[2023,11,"phyron","cta_cust_reserve",4,4],[2023,11,"phyron","cta_info_box",32,20],[2023,11,"phyron","cta_share",9,3],[2023,11,"phyron","cta_share_done",10,6],[2023,11,"phyron","cta_share_error",17,14],[2023,11,"phyron","cta_share_facebook",1,1],[2023,11,"phyron","cta_share_start",26,19],[2023,11,"autotrader","fullscreen",278,266],[2023,11,"motorscouk","fullscreen",1,1],[2023,11,"phyron","fullscreen",208,163],[2023,11,"autotrader","view_25",3817,3649],[2023,11,"phyron","view_25",4027,3237],[2023,11,"motorscouk","view_25",723,723],[2023,11,"motorscouk","view_50",541,541],[2023,11,"phyron","view_50",3382,2781],[2023,11,"autotrader","view_50",3180,3052],[2023,11,"motorscouk","view_75",433,433],[2023,11,"phyron","view_75",2966,2479],[2023,11,"autotrader","view_75",2742,2639],[2023,11,"motorscouk","view_end",314,314],[2023,11,"phyron","view_end",1727,1525],[2023,11,"autotrader","view_end",1441,1405],[2023,11,"phyron","view_start",5171,4070],[2023,11,"motorscouk","view_start",1401,1397],[2023,11,"autotrader","view_start",4920,4652],[2023,11,"default","view_start",1,1],
+[2023,12,"phyron","cta_cust_book_test_drive",5,4],[2023,12,"phyron","cta_cust_reserve",4,4],[2023,12,"phyron","cta_info_box",18,15],[2023,12,"phyron","cta_share",1,1],[2023,12,"phyron","cta_share_done",6,6],[2023,12,"phyron","cta_share_error",6,6],[2023,12,"phyron","cta_share_start",12,10],[2023,12,"autotrader","fullscreen",299,290],[2023,12,"phyron","fullscreen",169,122],[2023,12,"default","view_25",1,1],[2023,12,"motorscouk","view_25",898,897],[2023,12,"autotrader","view_25",3733,3515],[2023,12,"phyron","view_25",3553,2891],[2023,12,"phyron","view_50",3082,2556],[2023,12,"autotrader","view_50",3063,2901],[2023,12,"motorscouk","view_50",680,679],[2023,12,"motorscouk","view_75",547,546],[2023,12,"autotrader","view_75",2662,2528],[2023,12,"phyron","view_75",2675,2258],[2023,12,"autotrader","view_end",1425,1373],[2023,12,"motorscouk","view_end",369,368],[2023,12,"phyron","view_end",1480,1317],[2023,12,"motorscouk","view_start",1630,1624],[2023,12,"default","view_start",1,1],[2023,12,"phyron","view_start",4685,3776],[2023,12,"autotrader","view_start",4844,4536],
+[2024,1,"default","cta_cust_book_test_drive",22,6],[2024,1,"phyron","cta_cust_book_test_drive",4,2],[2024,1,"phyron","cta_cust_reserve",6,6],[2024,1,"default","cta_cust_reserve",13,6],[2024,1,"phyron","cta_info_box",16,11],[2024,1,"default","cta_share",4,2],[2024,1,"phyron","cta_share",1,1],[2024,1,"phyron","cta_share_done",13,5],[2024,1,"phyron","cta_share_error",11,8],[2024,1,"phyron","cta_share_start",24,11],[2024,1,"phyron","fullscreen",233,180],[2024,1,"autotrader","fullscreen",410,399],[2024,1,"phyron","view_25",4741,3887],[2024,1,"default","view_25",15,3],[2024,1,"motorscouk","view_25",1351,1351],[2024,1,"autotrader","view_25",5657,5308],[2024,1,"default","view_50",13,3],[2024,1,"phyron","view_50",4084,3408],[2024,1,"motorscouk","view_50",1066,1065],[2024,1,"autotrader","view_50",4683,4425],[2024,1,"autotrader","view_75",3998,3803],[2024,1,"motorscouk","view_75",849,848],[2024,1,"phyron","view_75",3605,3057],[2024,1,"default","view_75",5,3],[2024,1,"default","view_end",3,3],[2024,1,"motorscouk","view_end",621,620],[2024,1,"autotrader","view_end",2048,1964],[2024,1,"phyron","view_end",2021,1808],[2024,1,"default","view_start",18,3],[2024,1,"phyron","view_start",5993,4810],[2024,1,"autotrader","view_start",7279,6793],[2024,1,"motorscouk","view_start",2472,2467],
+[2024,2,"phyron","cta_cust_book_test_drive",1,1],[2024,2,"default","cta_cust_book_test_drive",1,1],[2024,2,"phyron","cta_cust_reserve",10,6],[2024,2,"phyron","cta_info_box",28,19],[2024,2,"phyron","cta_share",7,6],[2024,2,"default","cta_share",2,1],[2024,2,"phyron","cta_share_done",8,7],[2024,2,"phyron","cta_share_email",1,1],[2024,2,"phyron","cta_share_error",4,4],[2024,2,"phyron","cta_share_start",12,11],[2024,2,"phyron","fullscreen",230,189],[2024,2,"autotrader","fullscreen",486,456],[2024,2,"phyron","view_25",4803,3828],[2024,2,"autotrader","view_25",6131,5787],[2024,2,"motorscouk","view_25",1525,1524],[2024,2,"default","view_25",3,2],[2024,2,"phyron","view_50",4155,3395],[2024,2,"default","view_50",2,2],[2024,2,"motorscouk","view_50",1203,1203],[2024,2,"autotrader","view_50",5073,4838],[2024,2,"motorscouk","view_75",961,961],[2024,2,"autotrader","view_75",4305,4128],[2024,2,"phyron","view_75",3640,3046],[2024,2,"phyron","view_end",2050,1793],[2024,2,"motorscouk","view_end",677,677],[2024,2,"autotrader","view_end",2208,2144],[2024,2,"motorscouk","view_start",2704,2697],[2024,2,"autotrader","view_start",7891,7370],[2024,2,"default","view_start",5,3],[2024,2,"phyron","view_start",5913,4570],
+[2024,3,"default","cta_cust_book_test_drive",1,1],[2024,3,"default","cta_cust_reserve",1,1],[2024,3,"phyron","cta_cust_reserve",6,6],[2024,3,"phyron","cta_info_box",30,20],[2024,3,"phyron","cta_share",7,7],[2024,3,"phyron","cta_share_done",5,4],[2024,3,"phyron","cta_share_error",14,11],[2024,3,"phyron","cta_share_start",20,17],[2024,3,"phyron","cta_share_whatsapp",3,3],[2024,3,"phyron","fullscreen",273,194],[2024,3,"autotrader","fullscreen",487,469],[2024,3,"autotrader","view_25",6337,5960],[2024,3,"motorscouk","view_25",1388,1388],[2024,3,"default","view_25",2,2],[2024,3,"phyron","view_25",5016,4087],[2024,3,"default","view_50",2,2],[2024,3,"autotrader","view_50",5291,5010],[2024,3,"phyron","view_50",4257,3555],[2024,3,"motorscouk","view_50",1074,1074],[2024,3,"autotrader","view_75",4588,4374],[2024,3,"phyron","view_75",3724,3149],[2024,3,"motorscouk","view_75",856,856],[2024,3,"default","view_75",2,2],[2024,3,"autotrader","view_end",2381,2297],[2024,3,"motorscouk","view_end",630,630],[2024,3,"default","view_end",2,2],[2024,3,"phyron","view_end",2029,1792],[2024,3,"motorscouk","view_start",2648,2644],[2024,3,"phyron","view_start",6152,4877],[2024,3,"default","view_start",5,5],[2024,3,"autotrader","view_start",8006,7469],
+[2024,4,"phyron","cta_cust_book_test_drive",4,4],[2024,4,"phyron","cta_cust_reserve",4,4],[2024,4,"phyron","cta_info_box",11,7],[2024,4,"phyron","cta_share_done",5,5],[2024,4,"phyron","cta_share_error",11,8],[2024,4,"phyron","cta_share_start",17,14],[2024,4,"motorscouk","fullscreen",3,2],[2024,4,"autotrader","fullscreen",415,402],[2024,4,"phyron","fullscreen",187,146],[2024,4,"phyron","view_25",4330,3595],[2024,4,"autotrader","view_25",5491,5163],[2024,4,"motorscouk","view_25",1269,1265],[2024,4,"motorscouk","view_50",1010,1008],[2024,4,"phyron","view_50",3663,3113],[2024,4,"autotrader","view_50",4550,4306],[2024,4,"autotrader","view_75",3927,3730],[2024,4,"phyron","view_75",3162,2741],[2024,4,"motorscouk","view_75",806,804],[2024,4,"autotrader","view_end",2048,1964],[2024,4,"motorscouk","view_end",589,589],[2024,4,"phyron","view_end",1733,1578],[2024,4,"phyron","view_start",5386,4293],[2024,4,"default","view_start",2,2],[2024,4,"autotrader","view_start",7166,6699],[2024,4,"motorscouk","view_start",2288,2281],
+[2024,5,"phyron","cta_cust_book_test_drive",3,1],[2024,5,"phyron","cta_cust_reserve",5,2],[2024,5,"phyron","cta_info_box",10,7],[2024,5,"phyron","cta_share",10,7],[2024,5,"phyron","cta_share_done",6,6],[2024,5,"phyron","cta_share_email",3,2],[2024,5,"phyron","cta_share_error",6,6],[2024,5,"phyron","cta_share_start",12,11],[2024,5,"phyron","cta_share_whatsapp",5,2],[2024,5,"autotrader","fullscreen",290,281],[2024,5,"phyron","fullscreen",191,145],[2024,5,"motorscouk","view_25",627,626],[2024,5,"autotrader","view_25",3946,3698],[2024,5,"phyron","view_25",3637,3001],[2024,5,"phyron","view_50",3030,2535],[2024,5,"motorscouk","view_50",482,481],[2024,5,"autotrader","view_50",3263,3067],[2024,5,"phyron","view_75",2583,2191],[2024,5,"autotrader","view_75",2765,2608],[2024,5,"motorscouk","view_75",392,391],[2024,5,"motorscouk","view_end",279,278],[2024,5,"phyron","view_end",1440,1283],[2024,5,"autotrader","view_end",1410,1358],[2024,5,"phyron","view_start",4574,3645],[2024,5,"default","view_start",2,2],[2024,5,"autotrader","view_start",5219,4855],[2024,5,"motorscouk","view_start",1242,1240],
+[2024,6,"phyron","cta_cust_book_test_drive",4,2],[2024,6,"phyron","cta_cust_reserve",7,6],[2024,6,"phyron","cta_info_box",14,10],[2024,6,"phyron","cta_share",3,3],[2024,6,"phyron","cta_share_done",8,6],[2024,6,"phyron","cta_share_email",1,1],[2024,6,"phyron","cta_share_error",3,3],[2024,6,"phyron","cta_share_start",11,8],[2024,6,"phyron","fullscreen",171,143],[2024,6,"autotrader","fullscreen",279,269],[2024,6,"motorscouk","fullscreen",1,1],[2024,6,"motorscouk","view_25",572,572],[2024,6,"autotrader","view_25",3656,3433],[2024,6,"phyron","view_25",3559,2934],[2024,6,"motorscouk","view_50",441,441],[2024,6,"autotrader","view_50",3024,2852],[2024,6,"phyron","view_50",2949,2455],[2024,6,"motorscouk","view_75",354,354],[2024,6,"phyron","view_75",2495,2114],[2024,6,"autotrader","view_75",2529,2395],[2024,6,"autotrader","view_end",1265,1215],[2024,6,"motorscouk","view_end",257,257],[2024,6,"phyron","view_end",1340,1196],[2024,6,"autotrader","view_start",4888,4564],[2024,6,"motorscouk","view_start",1066,1063],[2024,6,"phyron","view_start",4542,3616],
+[2024,7,"default","cta_cust_book",2,1],[2024,7,"phyron","cta_cust_book",73,9],[2024,7,"phyron","cta_cust_bookatestdrive",9,9],[2024,7,"default","cta_cust_chatbot",4,4],[2024,7,"phyron","cta_cust_chatbot",120,9],[2024,7,"phyron","cta_info_box",20,16],[2024,7,"phyron","cta_share",7,5],[2024,7,"phyron","cta_share_done",10,5],[2024,7,"phyron","cta_share_email",1,1],[2024,7,"phyron","cta_share_error",12,9],[2024,7,"phyron","cta_share_start",22,14],[2024,7,"phyron","cta_share_whatsapp",1,1],[2024,7,"phyron","fullscreen",178,139],[2024,7,"autotrader","fullscreen",361,349],[2024,7,"phyron","view_25",3799,3226],[2024,7,"autotrader","view_25",4582,4294],[2024,7,"motorscouk","view_25",910,910],[2024,7,"default","view_25",11,3],[2024,7,"default","view_50",10,2],[2024,7,"autotrader","view_50",3826,3615],[2024,7,"phyron","view_50",3263,2805],[2024,7,"motorscouk","view_50",693,693],[2024,7,"motorscouk","view_75",555,555],[2024,7,"phyron","view_75",2736,2391],[2024,7,"autotrader","view_75",3143,2986],[2024,7,"default","view_75",6,2],[2024,7,"default","view_end",4,1],[2024,7,"motorscouk","view_end",406,406],[2024,7,"phyron","view_end",1681,1512],[2024,7,"autotrader","view_end",1776,1712],[2024,7,"autotrader","view_start",6039,5598],[2024,7,"default","view_start",15,3],[2024,7,"phyron","view_start",4723,3858],[2024,7,"motorscouk","view_start",1636,1635],
+[2024,8,"phyron","cta_cust_bookatestdrive",11,10],[2024,8,"phyron","cta_info_box",14,13],[2024,8,"phyron","cta_share_done",5,5],[2024,8,"phyron","cta_share_error",7,7],[2024,8,"phyron","cta_share_start",12,12],[2024,8,"phyron","fullscreen",158,136],[2024,8,"autotrader","fullscreen",261,258],[2024,8,"motorscouk","fullscreen",1,1],[2024,8,"autotrader","view_25",3597,3396],[2024,8,"phyron","view_25",3493,2957],[2024,8,"motorscouk","view_25",988,986],[2024,8,"phyron","view_50",3011,2582],[2024,8,"motorscouk","view_50",780,778],[2024,8,"autotrader","view_50",3036,2873],[2024,8,"autotrader","view_75",2488,2364],[2024,8,"phyron","view_75",2555,2227],[2024,8,"motorscouk","view_75",642,640],[2024,8,"phyron","view_end",1655,1490],[2024,8,"motorscouk","view_end",475,474],[2024,8,"autotrader","view_end",1506,1447],[2024,8,"motorscouk","view_start",1765,1763],[2024,8,"phyron","view_start",4274,3502],[2024,8,"autotrader","view_start",4716,4428],
+[2024,9,"phyron","cta_cust_bookatestdrive",9,9],[2024,9,"phyron","cta_info_box",11,10],[2024,9,"phyron","cta_share",1,1],[2024,9,"phyron","cta_share_done",4,4],[2024,9,"phyron","cta_share_error",4,4],[2024,9,"phyron","cta_share_start",8,8],[2024,9,"phyron","fullscreen",171,128],[2024,9,"motorscouk","fullscreen",3,3],[2024,9,"autotrader","fullscreen",250,244],[2024,9,"motorscouk","view_25",944,944],[2024,9,"autotrader","view_25",3948,3722],[2024,9,"phyron","view_25",3660,3141],[2024,9,"autotrader","view_50",3350,3192],[2024,9,"phyron","view_50",3156,2735],[2024,9,"motorscouk","view_50",745,745],[2024,9,"motorscouk","view_75",607,607],[2024,9,"phyron","view_75",2532,2244],[2024,9,"autotrader","view_75",2730,2624],[2024,9,"autotrader","view_end",1695,1632],[2024,9,"motorscouk","view_end",460,460],[2024,9,"phyron","view_end",1707,1556],[2024,9,"phyron","view_start",4446,3667],[2024,9,"motorscouk","view_start",1680,1679],[2024,9,"autotrader","view_start",5099,4744],
+[2024,10,"phyron","cta_cust_bookatestdrive",26,17],[2024,10,"phyron","cta_info_box",16,10],[2024,10,"phyron","cta_share_done",8,5],[2024,10,"phyron","cta_share_error",12,11],[2024,10,"phyron","cta_share_start",20,16],[2024,10,"phyron","fullscreen",151,117],[2024,10,"autotrader","fullscreen",206,202],[2024,10,"autotrader","view_25",3966,3706],[2024,10,"phyron","view_25",3554,3051],[2024,10,"motorscouk","view_25",1026,1022],[2024,10,"default","view_25",1,1],[2024,10,"motorscouk","view_50",831,829],[2024,10,"autotrader","view_50",3380,3173],[2024,10,"phyron","view_50",3043,2673],[2024,10,"phyron","view_75",2473,2224],[2024,10,"autotrader","view_75",2750,2610],[2024,10,"motorscouk","view_75",674,673],[2024,10,"autotrader","view_end",1841,1757],[2024,10,"motorscouk","view_end",498,497],[2024,10,"phyron","view_end",1716,1569],[2024,10,"autotrader","view_start",5052,4622],[2024,10,"motorscouk","view_start",1772,1762],[2024,10,"default","view_start",1,1],[2024,10,"phyron","view_start",4377,3623],
+[2024,11,"phyron","cta_cust_bookatestdrive",6,6],[2024,11,"default","cta_cust_bookatestdrive",3,2],[2024,11,"default","cta_info_box",2,1],[2024,11,"phyron","cta_info_box",15,9],[2024,11,"default","cta_share_done",1,1],[2024,11,"phyron","cta_share_done",2,2],[2024,11,"phyron","cta_share_error",9,4],[2024,11,"default","cta_share_start",1,1],[2024,11,"phyron","cta_share_start",11,6],[2024,11,"autotrader","fullscreen",195,192],[2024,11,"phyron","fullscreen",133,110],[2024,11,"phyron","view_25",3323,2867],[2024,11,"default","view_25",1,1],[2024,11,"autotrader","view_25",3642,3460],[2024,11,"motorscouk","view_25",861,861],[2024,11,"default","view_50",1,1],[2024,11,"autotrader","view_50",3137,3008],[2024,11,"motorscouk","view_50",699,699],[2024,11,"phyron","view_50",2869,2523],[2024,11,"default","view_75",1,1],[2024,11,"autotrader","view_75",2533,2446],[2024,11,"motorscouk","view_75",578,578],[2024,11,"phyron","view_75",2297,2081],[2024,11,"phyron","view_end",1602,1482],[2024,11,"default","view_end",1,1],[2024,11,"motorscouk","view_end",439,439],[2024,11,"autotrader","view_end",1681,1638],[2024,11,"phyron","view_start",4095,3417],[2024,11,"autotrader","view_start",4517,4190],[2024,11,"motorscouk","view_start",1541,1537],[2024,11,"default","view_start",4,2],
+[2024,12,"phyron","cta_cust_bookatestdrive",12,12],[2024,12,"phyron","cta_info_box",5,4],[2024,12,"phyron","cta_share_done",6,3],[2024,12,"phyron","cta_share_error",3,3],[2024,12,"phyron","cta_share_start",9,6],[2024,12,"autotrader","fullscreen",203,192],[2024,12,"phyron","fullscreen",90,77],[2024,12,"autotrader","view_25",2336,2249],[2024,12,"phyron","view_25",3116,2754],[2024,12,"motorscouk","view_25",886,886],[2024,12,"motorscouk","view_50",717,717],[2024,12,"phyron","view_50",2603,2348],[2024,12,"autotrader","view_50",2028,1963],[2024,12,"autotrader","view_75",1670,1629],[2024,12,"motorscouk","view_75",578,578],[2024,12,"phyron","view_75",2084,1925],[2024,12,"phyron","view_end",1430,1331],[2024,12,"autotrader","view_end",1146,1125],[2024,12,"motorscouk","view_end",451,451],[2024,12,"motorscouk","view_start",1612,1611],[2024,12,"phyron","view_start",3841,3280],[2024,12,"autotrader","view_start",2953,2805],
+[2025,1,"phyron","cta_cust_bookatestdrive",11,8],[2025,1,"phyron","cta_info_box",6,5],[2025,1,"phyron","cta_share_done",2,2],[2025,1,"phyron","cta_share_error",4,4],[2025,1,"phyron","cta_share_start",6,6],[2025,1,"autotrader","fullscreen",187,179],[2025,1,"phyron","fullscreen",100,98],[2025,1,"autotrader","view_25",2618,2534],[2025,1,"phyron","view_25",3913,3408],[2025,1,"motorscouk","view_25",1062,1059],[2025,1,"phyron","view_50",3343,2958],[2025,1,"motorscouk","view_50",857,855],[2025,1,"autotrader","view_50",2275,2207],[2025,1,"motorscouk","view_75",696,694],[2025,1,"phyron","view_75",2648,2384],[2025,1,"autotrader","view_75",1902,1855],[2025,1,"autotrader","view_end",1324,1298],[2025,1,"phyron","view_end",1856,1701],[2025,1,"motorscouk","view_end",521,521],[2025,1,"autotrader","view_start",3183,3024],[2025,1,"motorscouk","view_start",1888,1880],[2025,1,"phyron","view_start",4776,4022],
+[2025,2,"phyron","cta_cust_bookatestdrive",12,12],[2025,2,"phyron","cta_info_box",12,9],[2025,2,"phyron","cta_share_done",6,6],[2025,2,"phyron","cta_share_error",15,12],[2025,2,"phyron","cta_share_start",21,16],[2025,2,"autotrader","fullscreen",94,92],[2025,2,"phyron","fullscreen",147,127],[2025,2,"motorscouk","fullscreen",1,1],[2025,2,"default","view_25",1,1],[2025,2,"phyron","view_25",3570,3136],[2025,2,"motorscouk","view_25",656,655],[2025,2,"autotrader","view_25",1327,1278],[2025,2,"autotrader","view_50",1181,1144],[2025,2,"motorscouk","view_50",544,543],[2025,2,"default","view_50",1,1],[2025,2,"phyron","view_50",3044,2725],[2025,2,"default","view_75",1,1],[2025,2,"phyron","view_75",2439,2224],[2025,2,"motorscouk","view_75",427,427],[2025,2,"autotrader","view_75",961,940],[2025,2,"motorscouk","view_end",312,312],[2025,2,"phyron","view_end",1623,1520],[2025,2,"autotrader","view_end",631,622],[2025,2,"default","view_end",1,1],[2025,2,"default","view_start",1,1],[2025,2,"phyron","view_start",4398,3750],[2025,2,"motorscouk","view_start",1202,1199],[2025,2,"autotrader","view_start",1680,1579],
+[2025,3,"phyron","cta_cust_bookatestdrive",10,10],[2025,3,"phyron","cta_info_box",11,10],[2025,3,"phyron","cta_share_done",3,3],[2025,3,"phyron","cta_share_error",7,6],[2025,3,"phyron","cta_share_start",10,8],[2025,3,"motorscouk","fullscreen",3,3],[2025,3,"autotrader","fullscreen",62,57],[2025,3,"phyron","fullscreen",198,160],[2025,3,"phyron","view_25",4317,3555],[2025,3,"motorscouk","view_25",623,623],[2025,3,"autotrader","view_25",810,778],[2025,3,"phyron","view_50",3684,3072],[2025,3,"autotrader","view_50",703,679],[2025,3,"motorscouk","view_50",511,511],[2025,3,"autotrader","view_75",604,586],[2025,3,"phyron","view_75",3175,2664],[2025,3,"motorscouk","view_75",415,415],[2025,3,"phyron","view_end",2131,1844],[2025,3,"autotrader","view_end",371,360],[2025,3,"motorscouk","view_end",316,316],[2025,3,"default","view_start",1,1],[2025,3,"phyron","view_start",5348,4249],[2025,3,"motorscouk","view_start",1067,1065],[2025,3,"autotrader","view_start",990,930],
+[2025,4,"phyron","cta_cust_bookatestdrive",71,19],[2025,4,"phyron","cta_info_box",19,4],[2025,4,"phyron","cta_share",3,1],[2025,4,"phyron","cta_share_done",2,2],[2025,4,"phyron","cta_share_error",12,11],[2025,4,"phyron","cta_share_start",14,14],[2025,4,"phyron","fullscreen",129,103],[2025,4,"autotrader","fullscreen",35,32],[2025,4,"phyron","view_25",3256,2843],[2025,4,"motorscouk","view_25",268,268],[2025,4,"autotrader","view_25",435,419],[2025,4,"motorscouk","view_50",231,231],[2025,4,"autotrader","view_50",387,374],[2025,4,"phyron","view_50",2863,2528],[2025,4,"autotrader","view_75",313,304],[2025,4,"motorscouk","view_75",194,194],[2025,4,"phyron","view_75",2505,2230],[2025,4,"phyron","view_end",1472,1342],[2025,4,"autotrader","view_end",147,143],[2025,4,"motorscouk","view_end",145,145],[2025,4,"autotrader","view_start",560,525],[2025,4,"motorscouk","view_start",306,306],[2025,4,"phyron","view_start",3997,3353],
+[2025,5,"phyron","cta_cust_bookatestdrive",110,29],[2025,5,"phyron","cta_info_box",9,4],[2025,5,"phyron","cta_share_done",3,2],[2025,5,"phyron","cta_share_error",15,10],[2025,5,"phyron","cta_share_start",18,11],[2025,5,"autotrader","fullscreen",16,16],[2025,5,"phyron","fullscreen",134,120],[2025,5,"motorscouk","view_25",792,792],[2025,5,"phyron","view_25",4364,3750],[2025,5,"autotrader","view_25",252,243],[2025,5,"autotrader","view_50",226,218],[2025,5,"motorscouk","view_50",663,663],[2025,5,"phyron","view_50",3807,3315],[2025,5,"phyron","view_75",3355,2937],[2025,5,"autotrader","view_75",198,193],[2025,5,"motorscouk","view_75",540,540],[2025,5,"motorscouk","view_end",390,390],[2025,5,"autotrader","view_end",107,104],[2025,5,"phyron","view_end",1975,1785],[2025,5,"motorscouk","view_start",1165,1165],[2025,5,"autotrader","view_start",315,296],[2025,5,"phyron","view_start",5232,4346],
+[2025,6,"phyron","cta_cust_bookatestdrive",97,40],[2025,6,"phyron","cta_info_box",3,3],[2025,6,"phyron","cta_share_done",9,6],[2025,6,"phyron","cta_share_error",9,5],[2025,6,"phyron","cta_share_start",18,11],[2025,6,"motorscouk","fullscreen",1,1],[2025,6,"phyron","fullscreen",178,140],[2025,6,"autotrader","fullscreen",12,10],[2025,6,"motorscouk","view_25",711,711],[2025,6,"phyron","view_25",3952,3460],[2025,6,"default","view_25",1,1],[2025,6,"autotrader","view_25",236,216],[2025,6,"motorscouk","view_50",598,598],[2025,6,"autotrader","view_50",206,190],[2025,6,"phyron","view_50",3466,3064],[2025,6,"default","view_50",1,1],[2025,6,"default","view_75",1,1],[2025,6,"phyron","view_75",2942,2618],[2025,6,"motorscouk","view_75",493,493],[2025,6,"autotrader","view_75",171,163],[2025,6,"autotrader","view_end",77,74],[2025,6,"motorscouk","view_end",360,360],[2025,6,"phyron","view_end",1595,1462],[2025,6,"default","view_start",1,1],[2025,6,"motorscouk","view_start",1102,1101],[2025,6,"autotrader","view_start",278,250],[2025,6,"phyron","view_start",4890,4139],
+[2025,7,"phyron","cta_cust_bookatestdrive",78,62],[2025,7,"phyron","cta_info_box",1,1],[2025,7,"phyron","cta_share_done",1,1],[2025,7,"phyron","cta_share_error",2,2],[2025,7,"phyron","cta_share_start",3,3],[2025,7,"autotrader","fullscreen",8,8],[2025,7,"phyron","fullscreen",135,127],[2025,7,"motorscouk","view_25",614,613],[2025,7,"autotrader","view_25",119,111],[2025,7,"phyron","view_25",3847,3631],[2025,7,"motorscouk","view_50",513,512],[2025,7,"phyron","view_50",3417,3224],[2025,7,"autotrader","view_50",107,101],[2025,7,"autotrader","view_75",82,76],[2025,7,"phyron","view_75",2694,2543],[2025,7,"motorscouk","view_75",409,408],[2025,7,"phyron","view_end",1253,1215],[2025,7,"autotrader","view_end",35,33],[2025,7,"motorscouk","view_end",259,258],[2025,7,"motorscouk","view_start",956,955],[2025,7,"phyron","view_start",4708,4396],[2025,7,"autotrader","view_start",138,130],
+[2025,8,"phyron","cta_cust_bookatestdrive",98,52],[2025,8,"phyron","cta_info_box",17,17],[2025,8,"phyron","cta_share_done",3,2],[2025,8,"phyron","cta_share_error",8,8],[2025,8,"phyron","cta_share_start",11,10],[2025,8,"autotrader","fullscreen",2,2],[2025,8,"phyron","fullscreen",164,126],[2025,8,"phyron","view_25",3671,3241],[2025,8,"autotrader","view_25",64,62],[2025,8,"motorscouk","view_25",513,513],[2025,8,"autotrader","view_50",56,55],[2025,8,"motorscouk","view_50",422,422],[2025,8,"phyron","view_50",3217,2846],[2025,8,"phyron","view_75",2566,2305],[2025,8,"motorscouk","view_75",353,353],[2025,8,"autotrader","view_75",43,43],[2025,8,"autotrader","view_end",18,18],[2025,8,"phyron","view_end",1199,1108],[2025,8,"motorscouk","view_end",230,230],[2025,8,"motorscouk","view_start",815,815],[2025,8,"phyron","view_start",4441,3868],[2025,8,"autotrader","view_start",81,75],
+[2025,9,"phyron","cta_cust_bookatestdrive",37,23],[2025,9,"phyron","cta_info_box",7,7],[2025,9,"phyron","cta_share_done",5,5],[2025,9,"phyron","cta_share_error",6,5],[2025,9,"phyron","cta_share_start",11,11],[2025,9,"phyron","fullscreen",121,116],[2025,9,"autotrader","fullscreen",2,1],[2025,9,"autotrader","view_25",57,56],[2025,9,"phyron","view_25",3357,2973],[2025,9,"motorscouk","view_25",553,552],[2025,9,"phyron","view_50",2956,2644],[2025,9,"motorscouk","view_50",472,471],[2025,9,"autotrader","view_50",50,49],[2025,9,"autotrader","view_75",42,41],[2025,9,"motorscouk","view_75",362,361],[2025,9,"phyron","view_75",2362,2148],[2025,9,"autotrader","view_end",22,22],[2025,9,"phyron","view_end",1101,1027],[2025,9,"motorscouk","view_end",257,257],[2025,9,"motorscouk","view_start",878,877],[2025,9,"phyron","view_start",4041,3530],[2025,9,"autotrader","view_start",73,72],
+[2025,10,"phyron","cta_cust_bookatestdrive",48,23],[2025,10,"phyron","cta_info_box",8,7],[2025,10,"phyron","cta_share_done",2,2],[2025,10,"phyron","cta_share_error",6,6],[2025,10,"phyron","cta_share_start",8,8],[2025,10,"phyron","fullscreen",115,101],[2025,10,"phyron","view_25",3694,3247],[2025,10,"autotrader","view_25",19,19],[2025,10,"motorscouk","view_25",515,515],[2025,10,"autotrader","view_50",18,18],[2025,10,"motorscouk","view_50",436,436],[2025,10,"phyron","view_50",3226,2863],[2025,10,"phyron","view_75",2611,2340],[2025,10,"motorscouk","view_75",336,336],[2025,10,"autotrader","view_75",15,15],[2025,10,"autotrader","view_end",8,8],[2025,10,"motorscouk","view_end",229,229],[2025,10,"phyron","view_end",1304,1221],[2025,10,"autotrader","view_start",24,23],[2025,10,"phyron","view_start",4579,3929],[2025,10,"motorscouk","view_start",843,842],
+[2025,11,"phyron","cta_cust_bookatestdrive",17,11],[2025,11,"phyron","cta_info_box",7,7],[2025,11,"phyron","cta_share_done",4,4],[2025,11,"phyron","cta_share_error",12,12],[2025,11,"phyron","cta_share_start",16,16],[2025,11,"autotrader","fullscreen",1,1],[2025,11,"phyron","fullscreen",143,123],[2025,11,"motorscouk","view_25",523,523],[2025,11,"phyron","view_25",3133,2756],[2025,11,"autotrader","view_25",1,1],[2025,11,"autotrader","view_50",1,1],[2025,11,"motorscouk","view_50",427,427],[2025,11,"phyron","view_50",2748,2434],[2025,11,"phyron","view_75",2240,2009],[2025,11,"autotrader","view_75",1,1],[2025,11,"motorscouk","view_75",341,341],[2025,11,"motorscouk","view_end",254,254],[2025,11,"phyron","view_end",1131,1058],[2025,11,"phyron","view_start",3821,3283],[2025,11,"autotrader","view_start",2,2],[2025,11,"motorscouk","view_start",844,842],
+[2025,12,"phyron","cta_cust_bookatestdrive",4,4],[2025,12,"phyron","cta_info_box",5,5],[2025,12,"phyron","cta_share_done",1,1],[2025,12,"phyron","cta_share_error",7,7],[2025,12,"phyron","cta_share_start",8,8],[2025,12,"phyron","fullscreen",82,72],[2025,12,"autotrader","fullscreen",1,1],[2025,12,"autotrader","view_25",19,19],[2025,12,"phyron","view_25",2400,2093],[2025,12,"motorscouk","view_25",138,138],[2025,12,"autotrader","view_50",17,17],[2025,12,"phyron","view_50",2101,1851],[2025,12,"motorscouk","view_50",109,109],[2025,12,"motorscouk","view_75",84,84],[2025,12,"phyron","view_75",1731,1553],[2025,12,"autotrader","view_75",17,17],[2025,12,"phyron","view_end",832,780],[2025,12,"autotrader","view_end",8,8],[2025,12,"motorscouk","view_end",59,59],[2025,12,"motorscouk","view_start",209,209],[2025,12,"autotrader","view_start",22,21],[2025,12,"phyron","view_start",2921,2505],
+[2026,1,"default","cta_cust_bookatestdrive",29,29],[2026,1,"phyron","cta_cust_bookatestdrive",23,23],[2026,1,"phyron","cta_info_box",40,40],[2026,1,"phyron","cta_share_done",12,12],[2026,1,"phyron","cta_share_error",55,53],[2026,1,"phyron","cta_share_start",68,65],[2026,1,"phyron","fullscreen",182,169],[2026,1,"phyron","view_25",3671,3360],[2026,1,"phyron","view_50",3254,2989],[2026,1,"phyron","view_75",2628,2433],[2026,1,"phyron","view_end",1298,1231],[2026,1,"default","view_start",3,1],[2026,1,"phyron","view_start",4523,4079],
+[2026,2,"default","cta_cust_bookatestdrive",25,22],[2026,2,"phyron","cta_cust_bookatestdrive",18,18],[2026,2,"phyron","cta_info_box",49,48],[2026,2,"phyron","cta_share_done",10,10],[2026,2,"phyron","cta_share_error",51,51],[2026,2,"phyron","cta_share_start",61,61],[2026,2,"phyron","fullscreen",163,157],[2026,2,"default","view_25",1,1],[2026,2,"phyron","view_25",2939,2725],[2026,2,"phyron","view_50",2574,2393],[2026,2,"phyron","view_75",2039,1911],[2026,2,"phyron","view_end",1022,974],[2026,2,"phyron","view_start",3525,3251],[2026,2,"default","view_start",5,5],
+[2026,3,"phyron","cta_cust_bookatestdrive",12,12],[2026,3,"phyron","cta_info_box",25,25],[2026,3,"phyron","cta_share_done",1,1],[2026,3,"phyron","cta_share_error",53,51],[2026,3,"phyron","cta_share_start",54,52],[2026,3,"phyron","fullscreen",98,88],[2026,3,"phyron","view_25",1369,1271],[2026,3,"phyron","view_50",1124,1061],[2026,3,"phyron","view_75",787,753],[2026,3,"phyron","view_end",478,460],[2026,3,"default","view_start",1,1],[2026,3,"phyron","view_start",1825,1619],
+[2026,4,"phyron","cta_cust_bookatestdrive",30,30],[2026,4,"phyron","cta_info_box",59,58],[2026,4,"phyron","cta_share",3,3],[2026,4,"phyron","cta_share_done",8,8],[2026,4,"phyron","cta_share_error",73,70],[2026,4,"phyron","cta_share_start",83,80],[2026,4,"phyron","fullscreen",229,217],[2026,4,"phyron","view_25",2780,2569],[2026,4,"phyron","view_50",2230,2066],[2026,4,"phyron","view_75",1706,1591],[2026,4,"phyron","view_end",1072,1022],[2026,4,"phyron","view_start",3527,3219],
+[2026,5,"phyron","cta_cust_bookatestdrive",31,28],[2026,5,"phyron","cta_info_box",58,55],[2026,5,"phyron","cta_share_done",10,9],[2026,5,"phyron","cta_share_error",78,76],[2026,5,"phyron","cta_share_start",89,77],[2026,5,"phyron","fullscreen",236,214],[2026,5,"phyron","view_25",2578,2325],[2026,5,"phyron","view_50",2018,1833],[2026,5,"phyron","view_75",1630,1493],[2026,5,"phyron","view_end",1220,1127],[2026,5,"phyron","view_start",3303,2913],
+
+];
+
+// r = [year, month, source, event, total, unique]
+const MONTH_NAMES=["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const SOURCE_COLORS={"phyron":"#e8f03a","autotrader":"#3a8ef0","motorscouk":"#3af0a0"};
+const SOURCE_LABELS={"phyron":"Phyron","autotrader":"AutoTrader","motorscouk":"Motors.co.uk"};
+
+let currentPeriod='2025-all', currentSource='all';
+let sourceChart, trendChart;
+
+function getData(source, periodOverride){
+  const p = periodOverride || currentPeriod;
+  const [yr, mo] = p.split('-');
+  const year = parseInt(yr);
+  const month = mo === 'all' ? null : parseInt(mo);
+  return RAW.filter(r => {
+    const yearOk = r[0] === year;
+    const monthOk = month === null || r[1] === month;
+    const srcOk = source === 'all' || r[2] === source;
+    return yearOk && monthOk && srcOk;
+  });
+}
+
+function sum(data, event, src){
+  const testDriveEvents = ['cta_cust_book_test_drive','cta_cust_bookatestdrive','cta_cust_book','cta_cust_bookatestdrive'];
+  if(event === 'test_drive') {
+    return data.filter(r => testDriveEvents.includes(r[3]) && (!src || r[2]===src)).reduce((a,r)=>a+r[4],0);
+  }
+  return data.filter(r=>(!event||r[3]===event)&&(!src||r[2]===src)).reduce((a,r)=>a+r[4],0);
+}
+
+function fmt(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'k':n.toString()}
+function pct(a,b){return b?Math.round(a/b*100)+'%':'0%'}
+function getSourceLabel(){return currentSource==='all'?'All Sources':SOURCE_LABELS[currentSource]||currentSource}
+
+function getPrevPeriod(){
+  const [yr,mo]=currentPeriod.split('-');
+  const year=parseInt(yr);
+  if(mo==='all'){
+    if(year>2023) return `${year-1}-all`;
+  } else {
+    const month=parseInt(mo);
+    if(month>1) return `${year}-${month-1}`;
+    else if(year>2023) return `${year-1}-12`;
+  }
+  return null;
+}
+
+function getYOYPeriod(){
+  const [yr,mo]=currentPeriod.split('-');
+  const year=parseInt(yr);
+  if(year<=2023) return null;
+  return `${year-1}-${mo}`;
+}
+
+function chgHtml(a,b,label){
+  if(!b)return'';
+  const p=Math.round((a-b)/b*100);
+  return p>=0?`<span class="kpi-change up">▲ ${p}% vs ${label}</span>`:`<span class="kpi-change down">▼ ${Math.abs(p)}% vs ${label}</span>`;
+}
+
+function getPeriodLabel(p){
+  if(!p) return '';
+  const [yr,mo]=p.split('-');
+  if(mo==='all') return yr;
+  return MONTH_NAMES[parseInt(mo)]+' '+yr;
+}
+
+function makeBannerHTML(curr, comp, label){
+  const metrics=[{l:'Video Starts',e:'view_start'},{l:'Completions',e:'view_end'},{l:'Fullscreen',e:'fullscreen'},{l:'Test Drives',e:'test_drive'},{l:'Shares Done',e:'cta_share_done'}];
+  return `<div class="banner-label">vs ${label}</div>`+
+    metrics.map(m=>{
+      const v1=sum(comp,m.e),v2=sum(curr,m.e);
+      const p=v1?Math.round((v2-v1)/v1*100):0;
+      const cls=p>=0?'up':'down';const arrow=p>=0?'▲':'▼';
+      return`<div style="display:flex;flex-direction:column"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">${m.l}</div><div class="mom-val ${cls}">${arrow} ${Math.abs(p)}%<span style="font-size:12px;font-family:DM Sans;color:var(--muted);margin-left:6px">${fmt(v1)} → ${fmt(v2)}</span></div></div>`;
+    }).join('');
+}
+
+function renderBanners(){
+  const bannerRow=document.getElementById('bannerRow');
+  const momBanner=document.getElementById('momBanner');
+  const yoyBanner=document.getElementById('yoyBanner');
+  const curr=getData(currentSource);
+  const prevP=getPrevPeriod();
+  const yoyP=getYOYPeriod();
+  let any=false;
+
+  if(prevP){
+    const comp=getData(currentSource,prevP);
+    momBanner.innerHTML=makeBannerHTML(curr,comp,getPeriodLabel(prevP));
+    momBanner.style.display='flex';any=true;
+  } else momBanner.style.display='none';
+
+  if(yoyP && currentPeriod.split('-')[0]!=='2023'){
+    const yoyComp=getData(currentSource,yoyP);
+    yoyBanner.innerHTML=makeBannerHTML(curr,yoyComp,getPeriodLabel(yoyP));
+    yoyBanner.style.display='flex';any=true;
+  } else yoyBanner.style.display='none';
+
+  bannerRow.style.display=any?'flex':'none';
+}
+
+function renderKPIs(data){
+  const starts=sum(data,'view_start'),ends=sum(data,'view_end'),fs=sum(data,'fullscreen');
+  const td=sum(data,'test_drive'),shares=sum(data,'cta_share_done');
+  const cr=starts?Math.round(ends/starts*100):0;
+  const yoyP=getYOYPeriod();
+  const yoy=yoyP?getData(currentSource,yoyP):null;
+  const yLabel=yoy?getPeriodLabel(yoyP):'';
+  const ys=yoy?sum(yoy,'view_start'):0,ye=yoy?sum(yoy,'view_end'):0,yf=yoy?sum(yoy,'fullscreen'):0,ytd=yoy?sum(yoy,'test_drive'):0,ysh=yoy?sum(yoy,'cta_share_done'):0;
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Total Video Starts</div><div class="kpi-value">${fmt(starts)}</div>${yoy?chgHtml(starts,ys,yLabel):''}<div class="kpi-sub">${getSourceLabel()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Video Completions</div><div class="kpi-value">${fmt(ends)}</div>${yoy?chgHtml(ends,ye,yLabel):''}<div class="kpi-sub" style="color:var(--accent2)">${cr}% completion rate</div></div>
+    <div class="kpi-card"><div class="kpi-label">Fullscreen Views</div><div class="kpi-value">${fmt(fs)}</div>${yoy?chgHtml(fs,yf,yLabel):''}<div class="kpi-sub">High-intent viewers</div></div>
+    <div class="kpi-card"><div class="kpi-label">Test Drive Bookings</div><div class="kpi-value">${fmt(td)}</div>${yoy?chgHtml(td,ytd,yLabel):''}<div class="kpi-sub">Direct bookings</div></div>
+    <div class="kpi-card"><div class="kpi-label">Successful Shares</div><div class="kpi-value">${fmt(shares)}</div>${yoy?chgHtml(shares,ysh,yLabel):''}<div class="kpi-sub">Organic reach</div></div>`;
+}
+
+function renderFunnel(data){
+  document.getElementById('funnelTag').textContent=getSourceLabel();
+  const stages=[{l:'Starts',e:'view_start'},{l:'25%',e:'view_25'},{l:'50%',e:'view_50'},{l:'75%',e:'view_75'},{l:'Complete',e:'view_end'}];
+  const vals=stages.map(s=>sum(data,s.e));const max=vals[0]||1;
+  const colors=['#e8f03a','#3af0a0','#3a8ef0','#c97dff','#f03a8e'];
+  document.getElementById('funnel').innerHTML=stages.map((s,i)=>{
+    const w=Math.round(vals[i]/max*100);
+    const showInside=w>15;
+    return`<div class="funnel-row">
+      <div class="funnel-label">${s.l}</div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar" style="width:${w}%;background:${colors[i]};min-width:0">${showInside?vals[i].toLocaleString():''}</div>
+        ${!showInside?`<span style="position:absolute;left:${w+1}%;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:${colors[i]};white-space:nowrap">${vals[i].toLocaleString()}</span>`:''}
+      </div>
+      <div class="funnel-pct">${i===0?'100%':pct(vals[i],vals[0])}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderEngGrid(data){
+  document.getElementById('engTag').textContent=getSourceLabel();
+  const items=[
+    {l:'Fullscreen',e:'fullscreen',c:'#e8f03a'},
+    {l:'Info Box Clicks',e:'cta_info_box',c:'#3af0a0'},
+    {l:'Test Drive Bookings',e:'test_drive',c:'#3a8ef0'},
+    {l:'Reservations',e:'cta_cust_reserve',c:'#f03a8e'},
+    {l:'Shares Done',e:'cta_share_done',c:'#c97dff'},
+  ];
+  document.getElementById('engGrid').innerHTML=items.map(it=>`<div class="eng-item"><div class="eng-num" style="color:${it.c}">${sum(data,it.e).toLocaleString()}</div><div class="eng-label">${it.l}</div></div>`).join('');
+
+  const breakdown=document.getElementById('engSourceBreakdown');
+  if(currentSource!=='all'){breakdown.innerHTML='';return;}
+  const sources=['phyron','autotrader','motorscouk'];
+  const metrics=[{l:'Fullscreen',e:'fullscreen'},{l:'Test Drives',e:'test_drive'},{l:'Reservations',e:'cta_cust_reserve'},{l:'Info Box',e:'cta_info_box'}];
+  breakdown.innerHTML=`<div class="source-breakdown-title">Breakdown by Source</div>
+  <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr><th style="text-align:left;padding:5px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--border)">Metric</th>
+    ${sources.map(s=>`<th style="text-align:right;padding:5px 8px;color:${SOURCE_COLORS[s]};font-size:10px;border-bottom:1px solid var(--border)">${SOURCE_LABELS[s]}</th>`).join('')}
+    </tr></thead>
+    <tbody>${metrics.map(m=>`<tr><td style="padding:7px 8px;color:var(--muted);border-bottom:1px solid var(--border)">${m.l}</td>${sources.map(s=>`<td style="text-align:right;padding:7px 8px;font-weight:500;border-bottom:1px solid var(--border)">${sum(data,m.e,s).toLocaleString()}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderSourceChart(data){
+  const vals=[sum(data,'view_start','phyron'),sum(data,'view_start','autotrader'),sum(data,'view_start','motorscouk')];
+  if(sourceChart)sourceChart.destroy();
+  sourceChart=new Chart(document.getElementById('sourceChart').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Phyron','AutoTrader','Motors.co.uk'],datasets:[{data:vals,backgroundColor:['#e8f03a','#3a8ef0','#3af0a0'],borderWidth:0,hoverOffset:6}]},
+    options:{plugins:{legend:{labels:{color:'#6b7490',font:{family:'DM Sans',size:12}}}},cutout:'65%'}
+  });
+}
+
+function renderTrendChart(){
+  const [yr,mo]=currentPeriod.split('-');
+  const year=parseInt(yr);
+  document.getElementById('trendTag').textContent=getSourceLabel()+' — '+year;
+
+  // Show monthly trend for selected year
+  const months=mo==='all'?[1,2,3,4,5,6,7,8,9,10,11,12]:[parseInt(mo)];
+  const labels=months.map(m=>MONTH_NAMES[m]);
+
+  const curr=months.map(m=>{
+    const d=RAW.filter(r=>r[0]===year&&r[1]===m&&(currentSource==='all'||r[2]===currentSource));
+    return sum(d,'view_start');
+  });
+
+  // YOY comparison
+  const prevYear=year-1;
+  const prev=months.map(m=>{
+    const d=RAW.filter(r=>r[0]===prevYear&&r[1]===m&&(currentSource==='all'||r[2]===currentSource));
+    return sum(d,'view_start');
+  });
+
+  if(trendChart)trendChart.destroy();
+  const datasets=[{label:String(year),data:curr,borderColor:'#e8f03a',backgroundColor:'rgba(232,240,58,0.08)',borderWidth:2,tension:0.4,fill:true,pointRadius:3,pointBackgroundColor:'#e8f03a'}];
+  if(prevYear>=2023) datasets.push({label:String(prevYear),data:prev,borderColor:'#3a8ef0',backgroundColor:'rgba(58,142,240,0.05)',borderWidth:2,tension:0.4,fill:true,pointRadius:3,pointBackgroundColor:'#3a8ef0',borderDash:[4,4]});
+
+  trendChart=new Chart(document.getElementById('trendChart').getContext('2d'),{
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#6b7490',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#6b7490',font:{size:10}},grid:{color:'#1a1e28'}},y:{ticks:{color:'#6b7490',font:{size:10}},grid:{color:'#252a38'},beginAtZero:true}}}
+  });
+}
+
+function render(){
+  const data=getData(currentSource);
+  renderBanners();renderKPIs(data);renderFunnel(data);renderEngGrid(data);renderSourceChart(data);renderTrendChart();
+}
+
+function setPeriod(period,el,label){
+  currentPeriod=period;
+  document.querySelectorAll('.year-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.dropdown-item').forEach(i=>i.classList.remove('active'));
+  const [yr]=period.split('-');
+  // Highlight parent dropdown btn if monthly
+  if(period.includes('-')&&!period.endsWith('all')){
+    const ddBtn=document.getElementById('dd'+yr+'Btn')||document.getElementById('dd'+yr+'mBtn');
+    if(ddBtn) ddBtn.classList.add('active');
+    if(el) el.classList.add('active');
+  } else {
+    if(el&&el.classList.contains('year-btn')) el.classList.add('active');
+    else if(el){
+      const ddBtn=document.getElementById('dd'+yr+'Btn')||document.getElementById('dd'+yr+'mBtn');
+      if(ddBtn) ddBtn.classList.add('active');
+      if(el) el.classList.add('active');
+    }
+  }
+  document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('open'));
+  render();
+}
+
+function filterSource(source,btn){
+  currentSource=source;
+  document.querySelectorAll('.source-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function toggleDropdown(id,e){
+  e.stopPropagation();
+  document.querySelectorAll('.dropdown-menu').forEach(m=>{if(m.id!==id)m.classList.remove('open');});
+  document.getElementById(id).classList.toggle('open');
+}
+document.addEventListener('click',()=>document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('open')));
+
+render();
+</script>
+</body>
+</html>
